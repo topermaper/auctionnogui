@@ -9,29 +9,41 @@ import java.util.Scanner;
 public class Menu {
 	
 	private String menu;
-	//private List<Item> itemList;
-	//private List<User> userList;
+	private String menuTitle;
+
 	private ItemDAO itemDAO;
 	private UserDAO userDAO;
 	private BidDAO bidDAO;
+	
+	private String displayInfo;
+	
+    private ArrayList<Option> options; 
+    
+    public Menu() {
+    	this.menu = "MAIN";
+    	this.menuTitle = "MAIN MENU";
+    	this.options = new ArrayList<>();
+    	this.displayInfo = "";
+
+	    options.add(new Option("1","Items"));
+	    options.add(new Option("2","Users"));
+	    options.add(new Option("3","Bids"));
+	    options.add(new Option("9","Exit"));
+    	
+    	this.itemDAO = new ItemDAO(
+        		Auctionnogui.getjdbcURL(), Auctionnogui.getjdbcUsername(), Auctionnogui.getjdbcPassword());
+    	
+    	this.userDAO = new UserDAO(
+        		Auctionnogui.getjdbcURL(), Auctionnogui.getjdbcUsername(), Auctionnogui.getjdbcPassword());
+    	
+    	this.bidDAO = new BidDAO(
+        		Auctionnogui.getjdbcURL(), Auctionnogui.getjdbcUsername(), Auctionnogui.getjdbcPassword());
+    }
     
     private static void cleanScreen() {
     	for(int clear = 0; clear < 100; clear++) {
 			System.out.println("") ;
 		}
-    }
-    
-    public Menu() {
-    	this.menu = "MAIN";
-    	
-    	itemDAO = new ItemDAO(
-        		Auctionnogui.getjdbcURL(), Auctionnogui.getjdbcUsername(), Auctionnogui.getjdbcPassword());
-    	
-    	userDAO = new UserDAO(
-        		Auctionnogui.getjdbcURL(), Auctionnogui.getjdbcUsername(), Auctionnogui.getjdbcPassword());
-    	
-    	bidDAO = new BidDAO(
-        		Auctionnogui.getjdbcURL(), Auctionnogui.getjdbcUsername(), Auctionnogui.getjdbcPassword());
     }
     
 	private List<Item> getItems() {
@@ -65,9 +77,9 @@ public class Menu {
 		return userList;
 	}
 	
-	private List<BidExtended> getBids() {
+	private List<BidDetails> getBids() {
 
-		List<BidExtended> bidList = new ArrayList<>();
+		List<BidDetails> bidList = new ArrayList<>();
 		
 		try {
 
@@ -82,9 +94,9 @@ public class Menu {
 		 	 
 	}
 	
-	private BidExtended getWinningBid(int item_id) {
+	private BidDetails getWinningBid(int item_id) {
 
-		BidExtended bid = null;
+		BidDetails bid = null;
 		
 		try {
 
@@ -99,13 +111,13 @@ public class Menu {
 	}
 	
 	private void printBidHeader() {
-		String headerFormat = "%5s %-25s %-20s %20s";
-		System.out.println(String.format(headerFormat, "id","description", "name", "bid"));
+		String headerFormat = "%5s %-30s %-30s %10s";
+		System.out.println(String.format(headerFormat, "id","item description", "user name", "bid"));
 		System.out.println("");
 	}
 	
-	private void printBid(BidExtended bid) {
-		String lineFormat = "%5s %-25s %-20s %20.2f";
+	private void printBid(BidDetails bid) {
+		String lineFormat = "%5s %-30s %-30s %10.2f";
 		System.out.println(String.format(lineFormat, 
 				Integer.toString(bid.getId()),
 				bid.getDescription(),
@@ -114,18 +126,15 @@ public class Menu {
 				));
 	}
 	
-	private void printBid(BidExtended bid, boolean printHeader) {
-		printBidHeader();
-		printBid(bid);
-	}
-
 	private void printItem(Item item) {
 		String lineFormat = "%5s %-35s";
 		System.out.println(String.format(lineFormat , Integer.toString(item.getId()),item.getDescription()));
 	}
 
 	private void printItemHeader() {
-		String headerFormat = "%5s %-35s";;
+		String headerFormat = "%5s %-35s";
+		System.out.println("Item List:");
+		System.out.println("");
 		System.out.println(String.format(headerFormat, "id","description"));
 		System.out.println("");
 	}
@@ -140,74 +149,225 @@ public class Menu {
 			 printItem(itemItr.next());
 			 
 		}
+		
+		System.out.println("");
 	}
 	
-	private void printBids(List<BidExtended> bidList) {
+	private void printBids(List<BidDetails> bidList) {
 
-		printBidHeader();
+		if ((bidList != null) && !(bidList.isEmpty())) {
+			
+			printBidHeader();
+	
+			Iterator<BidDetails> bidItr = bidList.iterator();
+			while(bidItr.hasNext()) {
+				 
+				printBid(bidItr.next());
+			}
+			
+			System.out.println("");
 
-		Iterator<BidExtended> bidItr = bidList.iterator();
-		while(bidItr.hasNext()) {
-			 
-			printBid(bidItr.next());
+		} else {
+			System.out.println("No bids found");
+			System.out.println("");
 		}
 	}
 	
+	
+	private void printUserHeader() {
+		String headerFormat = "%5s %-25s %-25s";
+		System.out.println("User list:");
+		System.out.println("");
+		System.out.println(String.format(headerFormat, "id","name","email"));
+		System.out.println("");
+	}
+	
+	private void printUser(User user) {
+		String lineFormat = "%5s %-25s %-25s";
+		System.out.println(String.format(lineFormat, 
+				 Integer.toString(user.getId()),
+				 user.getName()+" "+user.getSurname(),
+				 user.getEmail()
+				 ));
+	}
 	
 	private void printUsers(List<User> userList) {
 
-		String lineFormat = "%5s %-25s %-25s";
 		
-		User user;
-
-		//Print header
-		System.out.println(String.format(lineFormat, "id","name","email"));
-		System.out.println("");
-
-		//Print items
+		printUserHeader();
+		
 		Iterator<User> userItr = userList.iterator();
 		while(userItr.hasNext()) {
-			 user = userItr.next();
-			 System.out.println(String.format(lineFormat, 
-					 Integer.toString(user.getId()),
-					 user.getName()+" "+user.getSurname(),
-					 user.getEmail()
-					 ));
+			printUser(userItr.next());
+			
 		}
+		
+		System.out.println("");
 	}
     
+	private void printMenuTitle() {
+		String titleFormat = "********** %s *********";
+	    System.out.println(String.format(titleFormat, this.menuTitle));
+	    System.out.println("");
+	    System.out.println("");
+	}
+	
+	private void printOptions() {
+		if (!(this.options.isEmpty())) {
+			
+			Option option;
+			String optionsFormat = "%s - %s";
+
+		    System.out.println("Options:");
+		    System.out.println("");
+		    
+		    Iterator<Option> iterator = this.options.iterator();
+		    
+		    while (iterator.hasNext()) {
+		    	option = iterator.next();
+		    	System.out.println(String.format(optionsFormat, option.getSelector(), option.getDescription()));
+		    }
+		    
+		    System.out.println("");
+		    System.out.println("Your choice: ");
+		}
+	}
+	
+	private void displayInfo() {
+		switch (this.displayInfo) {
+			case "ITEMS":
+				this.printItems(getItems());
+				break;
+			case "USERS":
+				this.printUsers(getUsers());
+				break;
+			case "BIDS":
+				this.printBids(getBids());
+				break;
+		}
+	}
+	
+	private void displayInfo(String displayInfo) {
+		this.displayInfo=displayInfo;
+		this.displayInfo();
+	}
+	
+	private void goToMenu(String menu) {
+	    options.clear();
+	
+	    this.menu =  menu;
+	    
+		switch (menu) {
+		case "MAIN":
+			this.menuTitle = "MAIN MENU";
+		    options.add(new Option("1","Items"));
+		    options.add(new Option("2","Users"));
+		    options.add(new Option("3","Bids"));
+		    options.add(new Option("9","Exit"));
+		    this.displayInfo="";
+		    break;
+		
+		case "ITEM":
+			this.menuTitle = "ITEM MENU";
+		    options.add(new Option("1","Add item"));
+		    options.add(new Option("2","Delete item"));
+		    options.add(new Option("9","Go main"));
+		    this.displayInfo="ITEMS";
+		    
+		    break;
+		    
+		case "USER":
+			this.menuTitle = "USER MENU";
+		    options.add(new Option("1","Add user"));
+		    options.add(new Option("2","Delete user"));
+		    options.add(new Option("9","Go main"));
+		    this.displayInfo="USERS";
+		    break;
+
+		case "BID":
+			this.menuTitle = "BID MENU";
+		    options.add(new Option("1","Bid on an item"));
+		    options.add(new Option("2","Get winning bid"));
+		    options.add(new Option("3","Get item bids"));
+		    options.add(new Option("4","Get user bids"));
+		    options.add(new Option("5","Delete bid"));
+		    options.add(new Option("9","Go main"));
+		    this.displayInfo="";
+		    break;
+		    
+		case "ITEM-ADD":
+			this.menuTitle = "Add item";
+			this.displayInfo="";
+		    break;
+		    
+		case "ITEM-DELETE":
+			this.menuTitle = "Delete item";
+			this.displayInfo="ITEMS";
+			break;
+			
+		case "USER-ADD":
+			this.menuTitle = "Add user";
+			this.displayInfo="";
+		    break;
+		    
+		case "USER-DELETE":
+			this.menuTitle = "Delete user";
+			this.displayInfo="USERS";
+			break;
+			
+		case "BID-ADD":
+			this.menuTitle = "Add bid on an item";
+			this.displayInfo="ITEMS";
+			break;
+			
+		case "BID-WINNING":
+			this.menuTitle = "Winning bid for an item";
+			this.displayInfo="ITEMS";
+			break;
+			
+		case "BID-USER":
+			this.menuTitle = "User bids";
+			this.displayInfo="USERS";
+			break;
+			
+		case "BID-ITEM":
+			this.menuTitle = "Item bids";
+			this.displayInfo="ITEMS";
+			break;
+			
+		case "BID-DELETE":
+			this.menuTitle = "Delete bid";
+			this.displayInfo="BIDS";
+			break;
+	
+		}
+	}
+	
     public void show() {
     	
     	Scanner scanner = new Scanner(System.in);
     	
     	cleanScreen();
     	
+	    printMenuTitle();
+	    displayInfo();
+	    printOptions();
+    	
     	switch (this.menu) {
 			case "MAIN":
-			    System.out.println("********** MAIN MENU *********");
-			    System.out.println("");
-			    System.out.println("");
-			    System.out.println("Options:");
-			    System.out.println("");
-			    System.out.println("1 - Items");
-			    System.out.println("2 - Users");
-			    System.out.println("3 - Bids");
-			    System.out.println("9 - Exit");
-			    System.out.println("");
-			    System.out.println("Your choice: ");
-			    
+			  
 			    switch (scanner.next()) {
 
 		        case "1":
-		        	this.menu="ITEM";
+		        	goToMenu("ITEM");
 		        	break;
 
 		        case "2":
-		        	this.menu="USER";
+		        	goToMenu("USER");
 		        	break;
 		        	
 		        case "3":
-		        	this.menu="BID";
+		        	goToMenu("BID");
 		        	break;
 
 		        case "9":        	
@@ -224,74 +384,36 @@ public class Menu {
 			    break;
 			    
 			case "ITEM":
-			    System.out.println("********** ITEM MENU *********");
-			    System.out.println("");
-			    System.out.println("Item list:");
-			    System.out.println("");
-	        	getItems();
-	        	
-	        	printItems(getItems());
-				
-				System.out.println("");
-				System.out.println("Options");
-				System.out.println("");
-			    System.out.println("1 - Add item");
-			    System.out.println("2 - Delete item");
-			    System.out.println("3 - Update item");
-			    System.out.println("9 - Go main");
-			    System.out.println("");
-			    System.out.println("Your choice: ");
 		    	
 			  	switch (scanner.next()) {
 
 			        case "1":
-			        	this.menu="ITEM-ADD";
+			        	goToMenu("ITEM-ADD");
 			        	break;
 			        case "2":
-			        	this.menu="ITEM-DELETE";
-			        	break;
-			        case "3":
+			        	goToMenu("ITEM-DELETE");
 			        	break;
 			        case "9":
-			        	this.menu="MAIN";
+			        	goToMenu("MAIN");
 			        	break;
 			        default:
 			        	break;
 			  	}
 			  	
 			  	break;
-			  	
-			  	
+			  				  	
 			case "USER":
-			    System.out.println("********** USER MENU *********");
-			    System.out.println("");
-			    System.out.println("User list:");
-			    System.out.println("");
-	        	
-	        	printUsers(getUsers());
-				
-				System.out.println("");
-				System.out.println("Options");
-				System.out.println("");
-			    System.out.println("1 - Add user");
-			    System.out.println("2 - Delete user");
-			    System.out.println("3 - Update user");
-			    System.out.println("9 - Go main");
-			    System.out.println("");
-			    System.out.println("Your choice: ");
 		    	
 			  	switch (scanner.next()) {
 
 			        case "1":
-			        	this.menu="USER-ADD";
+			        	goToMenu("USER-ADD");
 			        	break;
 			        case "2":
-			        	this.menu="USER-DELETE";
-			        	break;
-			        case "3":
+			        	goToMenu("USER-DELETE");
 			        	break;
 			        case "9":
-			        	this.menu="MAIN";
+			        	goToMenu("MAIN");
 			        	break;
 			        default:
 			        	break;
@@ -300,39 +422,26 @@ public class Menu {
 			  	break;
 
 			case "BID":
-			    System.out.println("********** BID MENU *********");
-			    System.out.println("");
-
-				System.out.println("Options:");
-				System.out.println("");
-			    System.out.println("1 - Bid on an item");
-			    System.out.println("2 - Get winning bid");
-			    System.out.println("3 - Get item bids");
-			    System.out.println("4 - Get user bids");
-			    System.out.println("5 - Delete bid");
-			    System.out.println("9 - Go main");
-			    System.out.println("");
-			    System.out.println("Your choice: ");
 		    	
 			  	switch (scanner.next()) {
 
 			        case "1":
-			        	this.menu="BID-ADD";
+			        	goToMenu("BID-ADD");
 			        	break;
 			        case "2":
-			        	this.menu="BID-WINNING";
+			        	goToMenu("BID-WINNING");
 			        	break;
 			        case "3":
-			        	this.menu="BID-ITEM";
+			        	goToMenu("BID-ITEM");
 			        	break;
 			        case "4":
-			        	this.menu="BID-USER";
+			        	goToMenu("BID-USER");
 			        	break;
 			        case "5":
-			        	this.menu="BID-DELETE";
+			        	goToMenu("BID-DELETE");
 			        	break;
 			        case "9":
-			        	this.menu="MAIN";
+			        	goToMenu("MAIN");
 			        	break;
 			        default:
 			        	break;
@@ -341,13 +450,10 @@ public class Menu {
 			  	break;
 
 			case "ITEM-ADD":
-				 System.out.println("********** Add Item *********");
-				 System.out.println("");
-				 System.out.println("");
-				 System.out.println("Description:");
-				 System.out.println("");
+
+				System.out.println("Description:");
+				System.out.println("");
 				 
-		    	// get the input as a String
 			    String description = scanner.nextLine();
       
 				try {
@@ -362,18 +468,11 @@ public class Menu {
 					MyUtils.sleep(Auctionnogui.MSG_DELAY_MS);
 				}
 				
-				this.menu = "ITEM";
+				goToMenu("ITEM");
 
 				break;
 				
 			case "ITEM-DELETE":
-			    System.out.println("********** Delete Item *********");
-			    System.out.println("");
-			    System.out.println("");
-			    System.out.println("Item list:");
-			    System.out.println("");
-	        	
-	        	printItems(getItems());
 				
 	        	System.out.println("");
 	        	System.out.println("Id:");
@@ -391,13 +490,11 @@ public class Menu {
 					MyUtils.sleep(Auctionnogui.MSG_DELAY_MS);
 				}
 				
-				this.menu = "ITEM";
+				goToMenu("ITEM");
 
 				break;
 				
 			case "USER-ADD":
-				System.out.println("********** Add User *********");
-				System.out.println("");
 
 				System.out.println("Name:");
 				System.out.println("");
@@ -425,26 +522,19 @@ public class Menu {
 					MyUtils.sleep(Auctionnogui.MSG_DELAY_MS);
 				}
 				
-				this.menu = "USER";
+				goToMenu("USER");
 
 				break;
 				
 			case "USER-DELETE":
-			    System.out.println("********** Delete User *********");
-			    System.out.println("");
-			    System.out.println("User list:");
-			    System.out.println("");
-	        	
-	        	printUsers(getUsers());
-				
-	        	System.out.println("");
+			    
 	        	System.out.println("Id:");
 	        	System.out.println("");
     
 				try {
-			        itemDAO.deleteItem(new Item(Integer.parseInt(scanner.next())));
+			        userDAO.deleteUser(new User(Integer.parseInt(scanner.next())));
 					System.out.println("");
-					System.out.println("Item deleted from the DB");
+					System.out.println("User deleted from the DB");
 				} catch (SQLException e){
 					 e.printStackTrace();
 					 System.out.println("");
@@ -453,37 +543,27 @@ public class Menu {
 					MyUtils.sleep(Auctionnogui.MSG_DELAY_MS);
 				}
 				
-				this.menu = "USER";
+				goToMenu("USER");
 
 				break;
 				
 				
 			case "BID-ADD":
-			    System.out.println("********** Add bid on an item *********");
-			    System.out.println("");
-			    System.out.println("User list:");
-			    System.out.println("");
-	        	
-	        	printUsers(getUsers());
+
+	        	Bid bid = new Bid ();
 				
-	        	System.out.println("");
 	        	System.out.println("Id:");
 	        	System.out.println("");
     
-	        	Bid bid = new Bid ();
-	        	bid.setUserId(Integer.parseInt(scanner.next()));
+	        	bid.setItemId(Integer.parseInt(scanner.next()));
 	        	
 	        	System.out.println("");
-			    System.out.println("Item list:");
-			    System.out.println("");
-			    
-	        	printItems(getItems());
-
-	        	System.out.println("");
+	        	displayInfo("USERS");
+	
 	        	System.out.println("Id:");
 	        	System.out.println("");
 	        	
-	        	bid.setItemId(Integer.parseInt(scanner.next()));
+	        	bid.setUserId(Integer.parseInt(scanner.next()));
 	        	
 	        	System.out.println("");
 	        	System.out.println("Bid:");
@@ -503,57 +583,34 @@ public class Menu {
 					MyUtils.sleep(Auctionnogui.MSG_DELAY_MS);
 				}
 				
-				this.menu = "BID";
+				goToMenu("BID");
 
 				break;
 				
 			case "BID-WINNING":
-			    System.out.println("********** Winning bid for an item *********");
-			    System.out.println("");
-			    System.out.println("Item list:");
-			    System.out.println("");
-	        	
-	        	printItems(getItems());
-				
-	        	System.out.println("");
+
 	        	System.out.println("Id:");
 	        	System.out.println("");
 
-	        	printBid(getWinningBid(Integer.parseInt(scanner.next())),true);
+	        	BidDetails bidDetails = getWinningBid(Integer.parseInt(scanner.next()));
+	        	if (bidDetails != null) {
+	        		printBid(bidDetails);
+	        	} else {
+	        		System.out.println("");
+	        		System.out.println("No bids found");
+	        		System.out.println("");
+	        	}
 	        	
-				System.out.println("");
-				System.out.println("Options:");
-				System.out.println("");
-	        	System.out.println("1 - Ok, go back to bid menu");
-			    System.out.println("9 - Go main");
-			    System.out.println("");
-			    System.out.println("Your choice: ");
-		    	
-			  	switch (scanner.next()) {
+	        	System.out.println("Press ENTER to continue ...");
+	        	try{System.in.read();}
+	        	catch(Exception e){}
 
-			        case "1":
-			        	this.menu="BID";
-			        	break;
-			        case "9":
-			        	this.menu="MAIN";
-			        	break;
-			        default:
-			        	break;
-			  	}
+			  	goToMenu("BID");
 
 				break;
-				
-				
-				
+							
 			case "BID-USER":
-			    System.out.println("********** User bids *********");
-			    System.out.println("");
-			    System.out.println("User list:");
-			    System.out.println("");
-	        	
-	        	printUsers(getUsers());
-				
-	        	System.out.println("");
+			    
 	        	System.out.println("Id:");
 	        	System.out.println("");
 				
@@ -567,38 +624,16 @@ public class Menu {
 					MyUtils.sleep(Auctionnogui.MSG_DELAY_MS);
 				}
 				
-				System.out.println("");
-				System.out.println("Options");
-				System.out.println("");
-	        	System.out.println("1 - Ok, go back to bid menu");
-			    System.out.println("9 - Go main");
-			    System.out.println("");
-			    System.out.println("Your choice: ");
+	        	System.out.println("Press ENTER to continue ...");
+	        	try{System.in.read();}
+	        	catch(Exception e){}
+
+			  	goToMenu("BID");
 		    	
-			  	switch (scanner.next()) {
-
-			        case "1":
-			        	this.menu="BID";
-			        	break;
-			        case "9":
-			        	this.menu="MAIN";
-			        	break;
-			        default:
-			        	break;
-			  	}
-
 				break;
-				
-				
+							
 			case "BID-ITEM":
-			    System.out.println("********** Item bids *********");
-			    System.out.println("");
-			    System.out.println("Item list:");
-			    System.out.println("");
-	        	
-	        	printItems( getItems());
-				
-	        	System.out.println("");
+
 	        	System.out.println("Id:");
 	        	System.out.println("");
 				
@@ -612,44 +647,22 @@ public class Menu {
 					MyUtils.sleep(Auctionnogui.MSG_DELAY_MS);
 				}
 				
-				System.out.println("");
-				System.out.println("Options:");
-				System.out.println("");
-	        	System.out.println("1 - Ok, go back to bid menu");
-			    System.out.println("9 - Go main");
-			    System.out.println("");
-			    System.out.println("Your choice: ");
-		    	
-			  	switch (scanner.next()) {
+	        	System.out.println("Press ENTER to continue ...");
+	        	try{System.in.read();}
+	        	catch(Exception e){}
 
-			        case "1":
-			        	this.menu="BID";
-			        	break;
-			        case "9":
-			        	this.menu="MAIN";
-			        	break;
-			        default:
-			        	break;
-			  	}
+			  	goToMenu("BID");
 
 				break;
 				
 				
 			case "BID-DELETE":
-			    System.out.println("********** Delete Bid *********");
-			    System.out.println("");
-			    System.out.println("");
-			    System.out.println("Bid list:");
-			    System.out.println("");
-	        	
-	        	printBids(getBids());
-			
-	        	System.out.println("");
+				
 	        	System.out.println("Id:");
 	        	System.out.println("");
      
 				try {
-			        bidDAO.deleteBid(new BidExtended(Integer.parseInt(scanner.next())));
+			        bidDAO.deleteBid(new BidDetails(Integer.parseInt(scanner.next())));
 					System.out.println("");
 					System.out.println("Bid deleted from the DB");
 				} catch (SQLException e){
@@ -660,7 +673,7 @@ public class Menu {
 					MyUtils.sleep(Auctionnogui.MSG_DELAY_MS);
 				}
 				
-				this.menu = "BID";
+				goToMenu("BID");
 
 				break;
 				

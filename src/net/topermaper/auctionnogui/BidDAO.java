@@ -16,7 +16,7 @@ public class BidDAO implements BidTracker{
     private String jdbcBidname;
     private String jdbcPassword;
     private Connection jdbcConnection;
-     
+    
     public BidDAO(String jdbcURL, String jdbcBidname, String jdbcPassword) {
         this.jdbcURL = jdbcURL;
         this.jdbcBidname = jdbcBidname;
@@ -57,8 +57,8 @@ public class BidDAO implements BidTracker{
     }
      
     
-    public List <BidExtended> listAllBids() throws SQLException {
-    	List <BidExtended> bidList = new ArrayList<>();
+    public List <BidDetails> listAllBids() throws SQLException {
+    	List <BidDetails> bidList = new ArrayList<>();
         String sql = "SELECT u.user_id, u.name, u.surname, i.item_id, i.description, b.bid_id, b.bid FROM tUser u, tItem i, tBid b WHERE u.user_id = b.user_id and i.item_id = b.item_id";
 
         connect();
@@ -69,7 +69,7 @@ public class BidDAO implements BidTracker{
          
         while (resultSet.next()) {
 
-        	BidExtended bidExtended = new BidExtended(
+        	BidDetails bidDetails = new BidDetails(
             		resultSet.getInt("bid_id"),
             		resultSet.getInt("item_id"),
             		resultSet.getString("description"),
@@ -79,7 +79,7 @@ public class BidDAO implements BidTracker{
             		resultSet.getFloat("bid")
             		);
 
-            bidList.add(bidExtended);
+            bidList.add(bidDetails);
         }
          
         resultSet.close();
@@ -91,7 +91,7 @@ public class BidDAO implements BidTracker{
     }
     
      
-    public boolean deleteBid(BidExtended bid) throws SQLException {
+    public boolean deleteBid(BidDetails bid) throws SQLException {
         String sql = "DELETE FROM tBid where bid_id = ?";
          
         connect();
@@ -105,9 +105,9 @@ public class BidDAO implements BidTracker{
         return rowDeleted;     
     }
      
-    public List<BidExtended> getUserBids(int user_id) throws SQLException {
+    public List<BidDetails> getUserBids(int user_id) throws SQLException {
 
-        List<BidExtended> bidList = new ArrayList<>();
+        List<BidDetails> bidList = new ArrayList<>();
 
         String sql = "SELECT b.bid_id, u.user_id, u.name, u.surname, i.item_id,i.description,b.bid_id, b.bid "
         		+ "FROM tUser u, tItem i, tBid b "
@@ -122,7 +122,7 @@ public class BidDAO implements BidTracker{
         
         while (resultSet.next()) {
 
-            BidExtended bid = new BidExtended(
+            BidDetails bid = new BidDetails(
             		resultSet.getInt("bid_id"),
             		resultSet.getInt("item_id"),
             		resultSet.getString("description"),
@@ -140,9 +140,9 @@ public class BidDAO implements BidTracker{
         return bidList;
     }
     
-    public List<BidExtended> getItemBids(int item_id) throws SQLException {
+    public List<BidDetails> getItemBids(int item_id) throws SQLException {
 
-        List<BidExtended> bidList = new ArrayList<>();
+        List<BidDetails> bidList = new ArrayList<>();
 
         String sql = "SELECT b.bid_id, u.user_id, u.name, u.surname, i.item_id,i.description,b.bid_id, b.bid "
         		+ "FROM tUser u, tItem i, tBid b "
@@ -158,7 +158,7 @@ public class BidDAO implements BidTracker{
         
         while (resultSet.next()) {
 
-            BidExtended bid = new BidExtended(
+            BidDetails bid = new BidDetails(
             		resultSet.getInt("bid_id"),
             		resultSet.getInt("item_id"),
             		resultSet.getString("description"),
@@ -177,13 +177,13 @@ public class BidDAO implements BidTracker{
         return bidList;
     }
     
-    public BidExtended getWinningBid(int item_id) throws SQLException {
+    public BidDetails getWinningBid(int item_id) throws SQLException {
 
-    	BidExtended bid = null;
-    	BidExtended maxBid = null;
-        List<BidExtended> bidList = getItemBids(item_id);
+    	BidDetails bid = null;
+    	BidDetails maxBid = null;
+        List<BidDetails> bidList = getItemBids(item_id);
 
-    	Iterator<BidExtended> bidItr = bidList.iterator();
+    	Iterator<BidDetails> bidItr = bidList.iterator();
 
 		while(bidItr.hasNext()) {
 

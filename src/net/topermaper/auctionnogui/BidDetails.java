@@ -1,23 +1,23 @@
 package net.topermaper.auctionnogui;
 
-public class BidExtended extends Bid{
+public class BidDetails extends Bid{
 
-	String userName;
-	String userSurname;
-	String itemDescription;
+	private String userName;
+	private String userSurname;
+	private String itemDescription;
 	
-	public BidExtended(int bid_id) {
+	public BidDetails(int bid_id) {
 		super(bid_id);
 	}
 	
-    public BidExtended(int id, int item_id, String description, int user_id, String name, String surname, float bid) {	
+    public BidDetails(int id, int item_id, String description, int user_id, String name, String surname, float bid) {	
     	super(id, item_id, user_id , bid);
     	this.userName = name;
     	this.userSurname = surname;
     	this.itemDescription = description;
     }
     
-    public BidExtended(int item_id, String description, int user_id, String name, String surname, float bid) {	
+    public BidDetails(int item_id, String description, int user_id, String name, String surname, float bid) {	
     	super(item_id, user_id , bid);
     	this.userName = name;
     	this.userSurname = surname;

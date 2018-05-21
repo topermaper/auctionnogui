@@ -9,9 +9,9 @@ public interface BidTracker {
 	
 	public Bid getWinningBid (int itemId) throws SQLException;
 	
-	public List<BidExtended> getItemBids (int itemId) throws SQLException;
+	public List<BidDetails> getItemBids (int itemId) throws SQLException;
 	
-	public List<BidExtended> getUserBids (int userId) throws SQLException;;
+	public List<BidDetails> getUserBids (int userId) throws SQLException;;
 	
 
 }
